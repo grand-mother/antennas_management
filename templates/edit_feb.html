@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Edit FEB Record</h1>
+    <form action="{{ url_for('edit_feb', feb_id=feb.feb_id) }}" method="POST">
+        <label for="mac_address">MAC Address:</label>
+        <input type="text" name="mac_address" value="{{ feb.mac_address }}" required><br>
+        <label for="ip_address">IP Address:</label>
+        <input type="text" name="ip_address" value="{{ feb.ip_address }}" required><br>
+        <label for="target_du_id">Target DU ID:</label>
+        <input type="number" name="target_du_id" value="{{ feb.target_du_id }}"><br>
+        <button type="submit">Save</button>
+    </form>
+    <a href="{{ url_for('index') }}">Back</a>
+{% endblock %}
+

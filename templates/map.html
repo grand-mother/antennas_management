@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antenna Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        #map {
+            height: 600px;  /* Augmente la hauteur de la carte */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GrandProto Antennas Management</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('index') }}">FEB Records</a></li>
+            <li><a href="{{ url_for('index_antenna') }}">Antenna Records</a></li>
+            <li><a href="{{ url_for('map_view') }}">Map</a></li>
+	    {% if current_user.is_authenticated %}
+                <li>
+                    <form action="{{ url_for('logout') }}" method="POST" style="display:inline;">
+                        <button type="submit">Logout</button>
+                    </form>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    <main>
+    <h1>Antenna Positions</h1>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        var map = L.map('map').setView([40.959, 93.94], 13); // Centrer sur le globe
+
+        // Add map layer
+        //L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        //    maxZoom: 19,
+        //    attribution: '© OpenStreetMap'
+        //}).addTo(map);
+
+        // Add map satellite (blocked in China)
+        //L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        //   attribution: 'Tiles © Esri — Source: Esri, DeLorme, NAVTEQ',
+        //   maxZoom: 19,
+        //}).addTo(map);
+
+        L.tileLayer('https://sat01.maps.yandex.net/tiles?l=sat&x={x}&y={y}&z={z}&lang=en_US', {
+            attribution: 'Map data © <a href="https://yandex.com/maps/">Yandex</a>',
+            maxZoom: 19
+         }).addTo(map);
+
+
+        // Ajouter des marqueurs pour chaque antenne
+        {% for antenna in antennas_febs %}
+          L.marker([{{ antenna.latitude }}, {{ antenna.longitude }}])
+            .addTo(map)
+            .bindPopup('DU ID: {{ antenna.du_id }}<br> lat: {{ antenna.latitude }}<br>long: {{ antenna.longitude }}<br> Feb: {{ antenna.feb_id }} ({{ antenna.ip_address }}) <br><a href="edit_antenna/{{ antenna.antenna_id }}">edit antenna</a>');
+        {% endfor %}
+    </script>
+    </main>
+</body>
+</html>
+

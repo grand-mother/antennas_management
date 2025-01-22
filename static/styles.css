@@ -1,0 +1,78 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+h1 {
+    color: #333;
+}
+
+header {
+    background-color: #4CAF50; /* Couleur d'arrière-plan */
+    padding: 15px; /* Espacement */
+    text-align: center; /* Centrer le texte */
+    color: white; /* Couleur du texte */
+}
+
+nav {
+    margin-bottom: 20px; /* Espacement en bas */
+}
+
+nav ul {
+    list-style-type: none; /* Supprimer les puces */
+    padding: 0; /* Supprimer l'espacement interne */
+}
+
+nav ul li {
+    display: inline; /* Afficher les éléments en ligne */
+    margin-right: 15px; /* Espacement entre les éléments */
+}
+
+nav ul li a {
+    text-decoration: none; /* Supprimer le soulignement des liens */
+    color: #4CAF50; /* Couleur des liens */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+form {
+    display: inline;
+}
+
+.alert {
+    color: red;  /* Texte rouge pour les messages d'erreur */
+    background-color: #f8d7da; /* Optionnel : fond rouge clair */
+    border: 1px solid #f5c6cb; /* Optionnel : bordure rouge */
+    padding: 10px; /* Espacement interne */
+    margin: 10px 0; /* Espacement externe */
+    border-radius: 5px; /* Coins arrondis */
+}
+
+.alert ul {
+    list-style-type: none; /* Supprimer la puce des listes */
+    padding: 0; /* Supprimer l'espacement interne */
+}
+
+/* Pour Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Pour Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}

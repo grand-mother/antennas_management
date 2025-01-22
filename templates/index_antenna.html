@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>Antenna records</h1>
+    <a href="{{ url_for('add_antenna') }}">Add a new antenna</a>
+    <table id="antennaTable">
+        <thead>
+            <tr>
+                <th>Longitude</th>
+                <th>Latitude</th>
+                <th>DU ID</th>
+                <th>FEB ID (IP Address)</th>
+                <th >Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for antenna in antennas_febs %}
+            <tr>
+                <form action="{{ url_for('edit_antenna', id=antenna.antenna_id) }}" method="POST">
+                    <td>
+                        <p hidden="hidden">{{ antenna.longitude }}</p>
+                        <input type="text" name="longitude" value="{{ antenna.longitude }}" required>
+                    </td>
+                    <td>
+                        <p hidden="hidden">{{ antenna.latitude }}</p>
+                        <input type="text" name="latitude" value="{{ antenna.latitude }}" required>
+                    </td>
+                    <td>
+                        <p hidden="hidden">{{ antenna.du_id }}</p>
+                        <input type="number" name="du_id" value="{{ antenna.du_id }}" required>
+                    </td>
+                    <td>
+                        {{ antenna.feb_id }} ({{ antenna.ip_address }})
+                    </td>
+
+                    <td>
+                        <button type="submit">Save</button>
+                </form>
+                        <form action="{{ url_for('delete_antenna', id=antenna.antenna_id) }}" method="POST" style="display:inline;">
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        $(document).ready( function () {
+            $('#antennaTable').DataTable(); // Initialize DataTables
+        });
+    </script>
+
+{% endblock %}

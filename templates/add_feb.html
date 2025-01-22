@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Add a new FEB record</h1>
+    <form action="{{ url_for('add_feb') }}" method="POST">
+        <label for="feb_id">FEB ID:</label>
+        <input type="number" name="feb_id" required><br>
+        <label for="mac_address">MAC Address:</label>
+        <input type="text" name="mac_address" pattern="([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})" title="Please provide a valid mac address" required><br>
+        <label for="ip_address">IP Address:</label>
+        <input type="text" name="ip_address" required><br>
+        <label for="target_du_id">Target DU ID:</label>
+        <input type="number" name="target_du_id"><br>
+        <button type="submit">Add</button>
+    </form>
+    <a href="{{ url_for('index') }}">Back</a>
+{% endblock %}
+

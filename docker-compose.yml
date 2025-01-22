@@ -1,0 +1,35 @@
+version: '3.3'
+
+services:
+  db:
+    image: postgis/postgis:latest
+    container_name: postgis_container
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: grand
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d
+
+  web:
+    #build: .
+    image: lpnhe/grand_proto_app
+    container_name: flask_app
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URI=postgresql://user:password@db/grand
+      - SECRET=Grand2026  
+    volumes:
+      - ./dhcpd_list.conf:/etc/dhcpd_list.conf
+      - ./:/app
+
+volumes:
+  postgres_data:
+
