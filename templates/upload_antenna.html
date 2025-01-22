@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>Upload Antennas from CSV</h1>
+    You can import a list of antennas from a .csv file. <br>
+    The .csv file must contain only 3 columns (longitude, latitude and du_id, IN THIS ORDER).<br>
+    The first line must contain the keywords longitude, latitude and du_id. <br><br>
+    <form action="{{ url_for('upload_antenna') }}" method="POST" enctype="multipart/form-data">
+        <label for="file">Choose CSV file:</label>
+        <input type="file" name="file" accept=".csv" required>
+        <button type="submit">Process</button>
+    </form>
+
+{% endblock %}

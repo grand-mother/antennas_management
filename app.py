@@ -1,9 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, get_flashed_messages
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, insert
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-import os
+from werkzeug.utils import secure_filename
+import os, csv
 
 app = Flask(__name__)
 app.secret_user = os.getenv('user', 'admin')
@@ -84,6 +85,11 @@ def index():
     febs = Feb.query.all()
     return render_template('index_feb.html', febs=febs)
 
+@app.route('/index_feb')
+@login_required
+def index_feb():
+    febs = Feb.query.all()
+    return render_template('index_feb.html', febs=febs)
 @app.route('/add_feb', methods=['GET', 'POST'])
 @login_required
 def add_feb():
@@ -294,7 +300,7 @@ def get_du_id():
     else:
        du_id = 0
     
-    return str(du_id)+"\n"
+    return str(du_id)
 
 
 @app.route('/map')
@@ -310,7 +316,142 @@ def map_view():
        ).fetchall()
     return render_template('map.html', antennas=antennas, febs=febs, antennas_febs=antennas_febs)
 
+#-----------
 
+app.config['UPLOAD_FOLDER'] = 'uploads/'  # Dir to store updated files
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+
+@app.route('/upload_antenna', methods=['GET', 'POST'])
+def upload_antenna():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+
+        # Check and secure file
+        if file and file.filename.endswith('.csv'):
+            # Save file
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # Process CSV
+            res=process_csv_antenna(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            if res:
+                flash('File successfully processed!')
+            else:
+                flash('<strong>File processed with errors!</strong>')
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('index_antenna'))  # Redirect to antennas
+
+    return render_template('upload_antenna.html')
+
+@app.route('/upload_feb', methods=['GET', 'POST'])
+def upload_feb():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+
+        # Check and secure file
+        if file and file.filename.endswith('.csv'):
+            # Save file
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # Process CSV
+            res=process_csv_feb(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            if res:
+                flash('<strong>File successfully processed!</strong>')
+            else:
+                flash('<strong>File processed with errors!</strong>')
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            return redirect(url_for('index_feb'))  # Redirect to feb
+
+    return render_template('upload_feb.html')
+
+def process_csv_antenna(file_path):
+    res=True
+    with open(file_path, 'r') as f:
+        reader = csv.reader(f)
+        line=2
+        next(reader)  # Ignore the header row if there is one
+        for row in reader:
+            # Read csv with columns : longitude, latitude, du_id
+            if len(row) != 3:
+                continue  # Ignore invalid lines
+            longitude, latitude, du_id = row
+            if latitude != "" and longitude != "" and du_id != "":
+                # Check if the antenna already exists in the database
+                try:
+                    existing_antenna = Antenna.query.filter_by(du_id=int(du_id)).first()
+                except Exception as e:
+                    flash(f'Error on line {line}: {str(e)} </li><li><strong></strong> </li>')
+                    res=False
+                    break
+                if existing_antenna is None:
+                    # Add to database
+                    try:
+                        new_antenna = Antenna(longitude=float(longitude), latitude=float(latitude), du_id=int(du_id))
+                        db.session.add(new_antenna)
+                        flash(f'Antenna {du_id} added')
+                    except Exception as e:
+                        #db.session.rollback()
+                        flash(f'Error: {str(e)} </li><li><strong></strong> </li>')
+                        res=False
+                else:
+                    # Update existing record
+                    existing_antenna.longitude = longitude
+                    existing_antenna.latitude = latitude
+
+                line+=1
+
+        db.session.commit()
+    return res
+
+def process_csv_feb(file_path):
+    res=True
+    with open(file_path, 'r') as f:
+        reader = csv.reader(f)
+        next(reader)  # Ignore the header row if there is one
+        for row in reader:
+            # Read csv with columns : longitude, latitude, du_id
+            if len(row) != 3:
+                continue  # Ignore invalid lines
+            feb_id, mac_address, ip_address = row
+            if feb_id != "" and mac_address != "" and ip_address != "":
+                # Check if the antenna already exists in the database
+                try:
+                    existing_feb = Feb.query.filter_by(feb_id=int(feb_id)).first()
+                except Exception as e:
+                    flash(f'Error: {str(e)} </li><li><strong></strong> </li>')
+                    res=False
+                    break
+                if existing_feb is None:
+                    # Add to database
+                    try:
+                        new_feb = Feb(feb_id=int(feb_id), mac_address=str(mac_address), ip_address=str(ip_address))
+                        db.session.add(new_feb)
+                        flash(f'Feb {feb_id} added')
+                    except Exception as e:
+                        flash(f'Error: {str(e)} </li><li><strong></strong> </li>')
+                        res = False
+                else:
+                    # Update feb
+                    #flash(f'Warning: Feb {feb_id} already exists (skipped)')
+                    existing_feb.mac_address = mac_address
+                    existing_feb.ip_address = ip_address
+
+        db.session.commit()
+    return res
+
+#-----------
 if __name__ == '__main__':
     with app.app_context():  # Création du contexte d'application
         db.create_all()  # Crée les tables si elles n'existent pas déjà

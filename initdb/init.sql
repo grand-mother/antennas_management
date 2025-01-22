@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS feb (
     target_du_id INT
 );
 
+CREATE INDEX idx_feb_id ON feb(feb_id);
+CREATE INDEX idx_ip_address ON feb(ip_address);
+
 -- join febs and antennas
 CREATE TABLE IF NOT EXISTS feb_antenna (
     id SERIAL PRIMARY KEY,
@@ -48,6 +51,8 @@ CREATE TABLE IF NOT EXISTS feb_antenna (
     FOREIGN KEY (antenna_id) REFERENCES antenna(id),
     UNIQUE (feb_id, antenna_id) -- unicity constraint
 );
+
+
 
 CREATE OR REPLACE FUNCTION update_last_seen()
 RETURNS TRIGGER AS $$

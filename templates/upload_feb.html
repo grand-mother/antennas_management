@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <h1>Upload Febs from CSV</h1>
+    You can import a list of febs from a .csv file. <br>
+    The .csv file must contain only 3 columns (feb_id, mac_address and ip_address, IN THIS ORDER).<br>
+    The first line must contain the keywords feb_id, mac_address and ip_address. <br><br>
+    <form action="{{ url_for('upload_feb') }}" method="POST" enctype="multipart/form-data">
+        <label for="file">Choose CSV file:</label>
+        <input type="file" name="file" accept=".csv" required>
+        <button type="submit">Process</button>
+    </form>
+
+{% endblock %}

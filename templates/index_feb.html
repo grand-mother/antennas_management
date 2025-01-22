@@ -2,7 +2,8 @@
 
 {% block content %}
     <h2>FEB Records</h2>
-    <a href="{{ url_for('add_feb') }}">Add a new record</a>
+    <li><a href="{{ url_for('add_feb') }}">Add a new record</a></li>
+    <li><a href="{{ url_for('upload_feb') }}">Upload febs from a csv file</a></li>
     <table id="febTable">
         <thead>
             <tr>

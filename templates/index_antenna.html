@@ -1,9 +1,12 @@
 {% extends 'base.html' %}
 
+
 {% block content %}
 
     <h1>Antenna records</h1>
-    <a href="{{ url_for('add_antenna') }}">Add a new antenna</a>
+    <li><a href="{{ url_for('add_antenna') }}">Add a new antenna</a></li>
+    <li><a href="{{ url_for('upload_antenna') }}">Upload antennas from a csv file</a></li>
+
     <table id="antennaTable">
         <thead>
             <tr>
