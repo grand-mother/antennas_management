@@ -1,6 +1,6 @@
 # antennas_management
 This is the code to manage antennas for the GrandProto experiment.
-It is composed of a main application app.py some web templates in the templates directory.
+It is composed of a main application app.py with some web templates in the templates directory.
 
 It also provides a small postgres database with the postgis extension to manage geospatial data.
 
