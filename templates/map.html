@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
+
     <style>
         #map {
             height: 600px;  /* Augmente la hauteur de la carte */
@@ -47,14 +49,15 @@
          }).addTo(map);
 
         // Create a group of clusters
-        var markersCluster = L.markerClusterGroup({
-            spiderfyOnMaxZoom: true, // spread cluster on clic
-            showCoverageOnHover: false,
-            zoomToBoundsOnClick: true,
-            maxClusterRadius: 15 // clusters size
-        });
+        //var markersCluster = L.markerClusterGroup({
+        //    spiderfyOnMaxZoom: true, // spread cluster on clic
+        //    showCoverageOnHover: false,
+        //    zoomToBoundsOnClick: true,
+        //    maxClusterRadius: 15 // clusters size
+        //});
 
         // Add marks for each antenna
+{#
         {% for antenna in antennas_febs %}
             var marker = L.marker([{{ antenna.latitude }}, {{antenna.longitude}}])
                 .bindPopup('DU ID: {{ antenna.du_id }}<br> lat: {{ antenna.latitude }}<br>long: {{ antenna.longitude }}<br> Feb: {{ antenna.feb_id }} ({{ antenna.ip_address }}) <br><a href="edit_antenna/{{ antenna.antenna_id }}">edit antenna</a>');
@@ -65,8 +68,71 @@
           //  .bindPopup('DU ID: {{ antenna.du_id }}<br> lat: {{ antenna.latitude }}<br>long: {{ antenna.longitude }}<br> Feb: {{ antenna.feb_id }} ({{ antenna.ip_address }}) <br><a href="edit_antenna/{{ antenna.antenna_id }}">edit antenna</a>');
 
         {% endfor %}
-        map.addLayer(markersCluster);
+#}
+        //map.addLayer(markersCluster);
 
+        let currentMarkers = L.markerClusterGroup({
+            spiderfyOnMaxZoom: true, // spread cluster on clic
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true,
+            maxClusterRadius: 15 // clusters size
+        });
+        map.addLayer(currentMarkers);
+
+        let abortController = null; // Pour annuler les requêtes en cours
+        let lastFetchTimestamp = 0;
+
+        const fetchDelay = 300; // Délai anti-rebond en ms
+
+
+        map.on('moveend zoomend', _.debounce(updateVisibleAntennas, fetchDelay));
+        updateVisibleAntennas();
+
+        async function fetchAntennas(bounds, zoom) {
+            var bboxStr = [
+                bounds.getSouthWest().lat,
+                bounds.getSouthWest().lng,
+                bounds.getNorthEast().lat,
+                bounds.getNorthEast().lng
+            ].join(',');
+            var response = await fetch(`/get_antennas?bounds=${bboxStr}&zoom=${zoom}`, {
+                signal: abortController.signal
+            });
+
+            lastFetchTimestamp = Date.now();
+            //alert(response.text());
+            return response.json();
+        }
+
+        function updateMarkers(antennas) {
+            currentMarkers.clearLayers(); // Supprime les anciens marqueurs
+
+            var newMarkers = antennas.map(antenna =>
+                //L.marker([antenna.latitude, antenna.longitude]).bindPopup(`Antenne #${antenna.id}`)
+                L.marker([antenna.latitude, antenna.longitude]).bindPopup(`DU_ID: ${ antenna.du_id }<br> lat: ${ antenna.latitude}<br>long: ${antenna.longitude}<br> Feb: ${antenna.feb_id} (${antenna.ip_address}) <br><a href="edit_antenna_du/${antenna.du_id}">edit antenna</a>`)
+            );
+
+            currentMarkers.addLayers(newMarkers);
+        }
+
+        async function updateVisibleAntennas() {
+            const bounds = map.getBounds();
+            const zoom = map.getZoom();
+
+            // Évite les requêtes inutiles
+            if (Date.now() - lastFetchTimestamp < fetchDelay) return;
+
+            // Annule la requête précédente
+            if (abortController) abortController.abort();
+            abortController = new AbortController();
+
+            try {
+                const antennas = await fetchAntennas(bounds, zoom);
+                updateMarkers(antennas);
+            } catch (err) {
+                if (err.name !== 'AbortError') console.error(err);
+            }
+}
 
     </script>
 

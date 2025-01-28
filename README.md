@@ -19,3 +19,14 @@ Once a client (feb) is registered with its correct informations and that antenna
 ```
 curl -X POST http://<server>:5000/get_du_id -H "Content-Type: application/x-www-form-urlencoded" -d "long=93.9869122891667&lat=40.9372295400003"
 ```
+
+## Useful commande
+You can get into the database docker with the command :
+```
+docker exec -it postgis_container psql -U user -d grand
+```
+
+You can get into the python application docker with : 
+```
+docker exec -it flask_app bash
+```

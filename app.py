@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, get_flashed_messages
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, get_flashed_messages, abort
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from sqlalchemy.sql import func, insert
@@ -236,6 +236,19 @@ def edit_antenna(id):
        flash(f'Error: {str(e)} </li><li><strong>The record was not updated !</strong> </li>')
        return redirect(url_for('index_antenna'))
 
+@app.route('/edit_antenna_du/<int:du_id>', methods=['GET', 'POST'])
+@login_required
+def edit_antenna_du(du_id):
+    try:
+       antenna = Antenna.query.filter(Antenna.du_id==du_id).first()
+       if antenna is None:
+            flash('Antenna not found !')
+            return redirect(url_for('index_antenna'))
+       return edit_antenna(antenna.id)
+    except Exception as e:
+       flash(f'Error: {str(e)} </li><li><strong>The record was not updated !</strong> </li>')
+       return redirect(url_for('index_antenna'))
+
 #@app.route('/edit_antenna/<int:id>', methods=['POST'])
 #@login_required
 #def edit_antenna(id):
@@ -324,44 +337,61 @@ def get_du_id():
     else:
        du_id = 0
     
-    return str(du_id)
+    return str(du_id)+str(client_ip)
 
 
 @app.route('/map')
 @login_required
 def map_view():
     # Get bounds and zoom level from request
-    bounds = request.args.get('bounds')  # expects "sw_lat,sw_lng,ne_lat,ne_lng"
+#    bounds = request.args.get('bounds')  # expects "sw_lat,sw_lng,ne_lat,ne_lng"
 #    flash(f"Received bounds: {bounds}")  # Debugging statement
-    antennas = Antenna.query.all()  # Récupérer toutes les antennes
-    febs = Feb.query.all()
-    antennas_febs = db.session.execute(
-            text("""
-            SELECT *
-            FROM get_antennas_with_febs();
-            """),
-       ).fetchall()
-    return render_template('map.html', antennas=antennas, febs=febs, antennas_febs=antennas_febs)
-
+#    antennas = Antenna.query.all()  # Récupérer toutes les antennes
+#    febs = Feb.query.all()
+#    antennas_febs = db.session.execute(
+#            text("""
+#            SELECT *
+#            FROM get_antennas_with_febs();
+#            """),
+#       ).fetchall()
+#    return render_template('map.html', antennas=antennas, febs=febs, antennas_febs=antennas_febs)
+   return render_template('map.html')
 
 @app.route('/get_antennas', methods=['GET'])
 def get_antennas():
     # Get bounds and zoom level from request
     bounds = request.args.get('bounds')  # expects "sw_lat,sw_lng,ne_lat,ne_lng"
-    flash(f"Received bounds: {bounds}")  # Debugging statement
 
     if bounds:
         sw_lat, sw_lng, ne_lat, ne_lng = map(float, bounds.split(','))
-        antennas = Antenna.query.filter(
-            Antenna.latitude >= sw_lat,
-            Antenna.latitude <= ne_lat,
-            Antenna.longitude >= sw_lng,
-            Antenna.longitude <= ne_lng
-        ).all()
-        flash(f"Number of antennas found: {len(antennas)}")  # Debugging statement
-        return jsonify([{"id": antenna.id, "latitude": antenna.latitude,
-                         "longitude": antenna.longitude} for antenna in antennas])
-    flash("No bounds provided")  # Debugging statement
+        antennas = db.session.execute(
+            text("""
+            SELECT *
+            FROM get_antennas_with_febs()
+            WHERE latitude >= :sw_lat
+            AND latitude <= :ne_lat
+            AND longitude >= :sw_lng
+            AND longitude <= :ne_lng           
+            ;
+            """),{"sw_lat": sw_lat, "ne_lat": ne_lat, "sw_lng": sw_lng, "ne_lng": ne_lng}
+       ).fetchall()
+        #antennas = Antenna.query.filter(
+        #    Antenna.latitude >= sw_lat,
+        #    Antenna.latitude <= ne_lat,
+        #    Antenna.longitude >= sw_lng,
+        #    Antenna.longitude <= ne_lng
+        #).all()
+        return jsonify([{"du_id": antenna.du_id, "latitude": antenna.latitude,
+                         "longitude": antenna.longitude, "id": antenna.antenna_id, "feb_id": antenna.feb_id, "ip_address": antenna.ip_address} for antenna in antennas])
+    else:
+        antennas = db.session.execute(
+            text("""
+            SELECT *
+            FROM get_antennas_with_febs();
+            """),
+        ).fetchall()
+        return jsonify([{"du_id": antenna.du_id, "lat": antenna.latitude,
+                         "long": antenna.longitude, "id": antenna.id, "feb_id": antenna.feb_id, "ip_address": antenna.ip_address} for antenna in antennas])
     return jsonify([])
 
 
