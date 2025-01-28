@@ -332,7 +332,7 @@ def get_du_id():
 def map_view():
     # Get bounds and zoom level from request
     bounds = request.args.get('bounds')  # expects "sw_lat,sw_lng,ne_lat,ne_lng"
-    flash(f"Received bounds: {bounds}")  # Debugging statement
+#    flash(f"Received bounds: {bounds}")  # Debugging statement
     antennas = Antenna.query.all()  # Récupérer toutes les antennes
     febs = Feb.query.all()
     antennas_febs = db.session.execute(

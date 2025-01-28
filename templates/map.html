@@ -3,11 +3,19 @@
 {% block head %}
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <!-- Leaflet CSS/JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- Leaflet.markercluster CSS/JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
     <style>
         #map {
             height: 600px;  /* Augmente la hauteur de la carte */
         }
     </style>
+
 {% endblock %}
 
 
@@ -17,7 +25,6 @@
     <h1>Antenna Positions</h1>
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
         // Initialize map
         var map = L.map('map').setView([40.959, 93.94], 13); // Centrer sur le globe
@@ -39,13 +46,28 @@
             maxZoom: 19
          }).addTo(map);
 
+        // Create a group of clusters
+        var markersCluster = L.markerClusterGroup({
+            spiderfyOnMaxZoom: true, // spread cluster on clic
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true,
+            maxClusterRadius: 15 // clusters size
+        });
 
-        // Ajouter des marqueurs pour chaque antenne
+        // Add marks for each antenna
         {% for antenna in antennas_febs %}
-          L.marker([{{ antenna.latitude }}, {{ antenna.longitude }}])
-            .addTo(map)
-            .bindPopup('DU ID: {{ antenna.du_id }}<br> lat: {{ antenna.latitude }}<br>long: {{ antenna.longitude }}<br> Feb: {{ antenna.feb_id }} ({{ antenna.ip_address }}) <br><a href="edit_antenna/{{ antenna.antenna_id }}">edit antenna</a>');
+            var marker = L.marker([{{ antenna.latitude }}, {{antenna.longitude}}])
+                .bindPopup('DU ID: {{ antenna.du_id }}<br> lat: {{ antenna.latitude }}<br>long: {{ antenna.longitude }}<br> Feb: {{ antenna.feb_id }} ({{ antenna.ip_address }}) <br><a href="edit_antenna/{{ antenna.antenna_id }}">edit antenna</a>');
+
+            markersCluster.addLayer(marker);
+          //L.marker([{{ antenna.latitude }}, {{ antenna.longitude }}])
+          //  .addTo(map)
+          //  .bindPopup('DU ID: {{ antenna.du_id }}<br> lat: {{ antenna.latitude }}<br>long: {{ antenna.longitude }}<br> Feb: {{ antenna.feb_id }} ({{ antenna.ip_address }}) <br><a href="edit_antenna/{{ antenna.antenna_id }}">edit antenna</a>');
+
         {% endfor %}
+        map.addLayer(markersCluster);
+
+
     </script>
 
 {% endblock %}
