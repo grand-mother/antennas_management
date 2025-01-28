@@ -10,10 +10,12 @@
     <table id="antennaTable">
         <thead>
             <tr>
-                <th>Longitude</th>
-                <th>Latitude</th>
-                <th>DU ID</th>
-                <th>FEB ID (IP Address)</th>
+                <th>Longitude <a href="{{ url_for('index_antenna', page=page, sort_by='longitude', sort_order='asc' if sort_by != 'longitude' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'longitude' and sort_order == 'asc' else 'down' }}"></i></a></th>
+                <th>Latitude <a href="{{ url_for('index_antenna', page=page, sort_by='latitude', sort_order='asc' if sort_by != 'latitude' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'latitude' and sort_order == 'asc' else 'down' }}"></i></a></th>
+                <th>DU ID <a href="{{ url_for('index_antenna', page=page, sort_by='du_id', sort_order='asc' if sort_by != 'du_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'du_id' and sort_order == 'asc' else 'down' }}"></i></a></th>
+                <th>FEB ID <a href="{{ url_for('index_antenna', page=page, sort_by='feb_id', sort_order='asc' if sort_by != 'feb_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'feb_id' and sort_order == 'asc' else 'down' }}"></i></a></th>
+                <th>MAC Address <a href="{{ url_for('index_antenna', page=page, sort_by='mac_address', sort_order='asc' if sort_by != 'mac_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'mac_address' and sort_order == 'asc' else 'down' }}"></i></a></th>
+                <th>IP Address <a href="{{ url_for('index_antenna', page=page, sort_by='ip_address', sort_order='asc' if sort_by != 'ip_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'ip_address' and sort_order == 'asc' else 'down' }}"></i></a></th>
                 <th >Actions</th>
             </tr>
         </thead>
@@ -36,7 +38,9 @@
                     <td>
                         {{ antenna.feb_id }} ({{ antenna.ip_address }})
                     </td>
-
+                    <td>
+                        {{ antenna.ip_address }}
+                    </td>
                     <td>
                         <button type="submit">Save</button>
                 </form>
@@ -49,11 +53,21 @@
             {% endfor %}
         </tbody>
     </table>
-
-    <script>
+<div>
+    {% if total_rows > per_page %}
+        {% if page > 1 %}
+            <a href="{{ url_for('index_antenna', page=page-1, sort_by=sort_by, sort_order=sort_order) }}">Previous</a>
+        {% endif %}
+        Page {{ page }} of {{ (total_rows // per_page) + (total_rows % per_page > 0) }}
+        {% if page < (total_rows // per_page) + (total_rows % per_page > 0) %}
+            <a href="{{ url_for('index_antenna', page=page+1, sort_by=sort_by, sort_order=sort_order) }}">Next</a>
+        {% endif %}
+    {% endif %}
+</div>
+{#    <script>
         $(document).ready( function () {
             $('#antennaTable').DataTable(); // Initialize DataTables
         });
-    </script>
+    </script>#}
 
 {% endblock %}

@@ -7,11 +7,11 @@
     <table id="febTable">
         <thead>
             <tr>
-                <th>FEB ID</th>
-                <th>MAC Address</th>
-                <th>IP Address</th>
-                <th>Target DU ID</th>
-                <th>Actions</th>
+
+                <th>FEB ID <a href="{{ url_for('index_feb', page=page, sort_by='feb_id', sort_order='asc' if sort_by != 'feb_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'feb_id' and sort_order == 'asc' else 'down' }}"></i></a></th>
+                <th>MAC Address <a href="{{ url_for('index_feb', page=page, sort_by='mac_address', sort_order='asc' if sort_by != 'mac_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'mac_address' and sort_order == 'asc' else 'down' }}"></i></a></th>
+                <th>IP Address <a href="{{ url_for('index_feb', page=page, sort_by='ip_address', sort_order='asc' if sort_by != 'ip_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'ip_address' and sort_order == 'asc' else 'down' }}"></i></a></th>
+                <th >Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -31,10 +31,6 @@
                         <input type="text" name="ip_address" value="{{ feb.ip_address }}" required>
                     </td>
                     <td>
-                        <p hidden="hidden">{{ feb.target_du_id }}</p>
-                        <input type="number" name="target_du_id" value="{{ feb.target_du_id }}">
-                    </td>
-                    <td>
                         <button type="submit">Save</button>
                 </form>
                         <form action="{{ url_for('delete_feb', feb_id=feb.feb_id) }}" method="POST" style="display:inline;">
@@ -46,11 +42,17 @@
             {% endfor %}
         </tbody>
     </table>
+<div>
+    {% if total_rows > per_page %}
+        {% if page > 1 %}
+            <a href="{{ url_for('index_feb', page=page-1, sort_by=sort_by, sort_order=sort_order) }}">Previous</a>
+        {% endif %}
+        Page {{ page }} of {{ (total_rows // per_page) + (total_rows % per_page > 0) }}
+        {% if page < (total_rows // per_page) + (total_rows % per_page > 0) %}
+            <a href="{{ url_for('index_feb', page=page+1, sort_by=sort_by, sort_order=sort_order) }}">Next</a>
+        {% endif %}
+    {% endif %}
+</div>
 
-    <script>
-        $(document).ready(function() {
-            $('#febTable').DataTable(); // Initialize DataTables
-        });
-    </script>
 
 {% endblock %}

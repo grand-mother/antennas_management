@@ -45,6 +45,18 @@ th, td {
 
 th {
     background-color: #f2f2f2;
+    position: relative;
+    cursor: pointer; /* Change cursor to pointer for better UX */
+}
+
+th a {
+    text-decoration: none; /* Remove underline from links */
+    color: inherit; /* Maintain the same color as the text */
+}
+
+th i {
+    margin-left: 5px; /* Space out the icon from the text */
+    font-size: 0.8em; /* Adjust the icon size */
 }
 
 form {

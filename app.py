@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, get_flashed_messages
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, get_flashed_messages
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from sqlalchemy.sql import func, insert
@@ -82,14 +82,31 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    febs = Feb.query.all()
-    return render_template('index_feb.html', febs=febs)
+    return index_feb()
+#    febs = Feb.query.all()
+#    return render_template('index_feb.html', febs=febs)
 
-@app.route('/index_feb')
+@app.route('/febs')
 @login_required
 def index_feb():
-    febs = Feb.query.all()
-    return render_template('index_feb.html', febs=febs)
+    page = request.args.get('page', 1, type=int)  # Get the current page number from URL
+    sort_by = request.args.get('sort_by', 'feb_id') # Get the sorting key
+    sort_order = request.args.get('sort_order', 'desc')  # Get the sort order, default to 'asc'
+    # Ensure valid sort_order
+    if sort_order not in ['asc', 'desc']:
+        sort_order = 'asc'
+    per_page = 15  # Number of records to be displayed per page
+    rows = db.session.execute(text((f"SELECT * FROM feb ORDER BY {sort_by} {sort_order}"))).fetchall()
+    # Calculate pagination
+    total_rows = len(rows)
+    start = (page - 1) * per_page
+    end = start + per_page
+    febs = rows[start:end]  # Slice the rows for the current page
+    return render_template('index_feb.html', febs=febs, page=page, total_rows=total_rows, per_page=per_page, sort_by=sort_by, sort_order=sort_order)
+
+
+    #febs = Feb.query.all()
+    #return render_template('index_feb.html', febs=febs)
 @app.route('/add_feb', methods=['GET', 'POST'])
 @login_required
 def add_feb():
@@ -164,13 +181,20 @@ def delete_feb(feb_id):
 @app.route('/antennas')
 @login_required
 def index_antenna():
-    antennas_febs = db.session.execute(
-            text("""
-            SELECT *
-            FROM get_antennas_with_febs();
-            """),
-       ).fetchall()
-    return render_template('index_antenna.html', antennas_febs=antennas_febs)
+    page = request.args.get('page', 1, type=int)  # Get the current page number from URL
+    sort_by = request.args.get('sort_by', 'du_id') # Get the sorting key
+    sort_order = request.args.get('sort_order', 'desc')  # Get the sort order, default to 'asc'
+    # Ensure valid sort_order
+    if sort_order not in ['asc', 'desc']:
+        sort_order = 'asc'
+    per_page = 15  # Number of records to be displayed per page
+    rows = db.session.execute(text((f"SELECT * FROM get_antennas_with_febs() ORDER BY {sort_by} {sort_order}"))).fetchall()
+    # Calculate pagination
+    total_rows = len(rows)
+    start = (page - 1) * per_page
+    end = start + per_page
+    antennas_febs = rows[start:end]  # Slice the rows for the current page
+    return render_template('index_antenna.html', antennas_febs=antennas_febs, page=page, total_rows=total_rows, per_page=per_page, sort_by=sort_by, sort_order=sort_order)
 
 #def index_antenna():
 #    antennas = Antenna.query.all()
@@ -306,6 +330,9 @@ def get_du_id():
 @app.route('/map')
 @login_required
 def map_view():
+    # Get bounds and zoom level from request
+    bounds = request.args.get('bounds')  # expects "sw_lat,sw_lng,ne_lat,ne_lng"
+    flash(f"Received bounds: {bounds}")  # Debugging statement
     antennas = Antenna.query.all()  # Récupérer toutes les antennes
     febs = Feb.query.all()
     antennas_febs = db.session.execute(
@@ -315,6 +342,28 @@ def map_view():
             """),
        ).fetchall()
     return render_template('map.html', antennas=antennas, febs=febs, antennas_febs=antennas_febs)
+
+
+@app.route('/get_antennas', methods=['GET'])
+def get_antennas():
+    # Get bounds and zoom level from request
+    bounds = request.args.get('bounds')  # expects "sw_lat,sw_lng,ne_lat,ne_lng"
+    flash(f"Received bounds: {bounds}")  # Debugging statement
+
+    if bounds:
+        sw_lat, sw_lng, ne_lat, ne_lng = map(float, bounds.split(','))
+        antennas = Antenna.query.filter(
+            Antenna.latitude >= sw_lat,
+            Antenna.latitude <= ne_lat,
+            Antenna.longitude >= sw_lng,
+            Antenna.longitude <= ne_lng
+        ).all()
+        flash(f"Number of antennas found: {len(antennas)}")  # Debugging statement
+        return jsonify([{"id": antenna.id, "latitude": antenna.latitude,
+                         "longitude": antenna.longitude} for antenna in antennas])
+    flash("No bounds provided")  # Debugging statement
+    return jsonify([])
+
 
 #-----------
 
