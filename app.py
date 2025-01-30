@@ -337,7 +337,7 @@ def get_du_id():
     else:
        du_id = 0
     
-    return str(du_id)+str(client_ip)
+    return str(du_id)
 
 
 @app.route('/map')
