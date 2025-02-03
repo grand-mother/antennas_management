@@ -1,5 +1,5 @@
 # antennas_management
-This is the code to manage antennas for the GrandProto experiment.
+This is the code to manage antennas and febs for the GrandProto experiment.
 It is composed of a main application app.py with some web templates in the templates directory.
 
 It also provides a small postgres database with the postgis extension to manage geospatial data.
@@ -7,18 +7,21 @@ It also provides a small postgres database with the postgis extension to manage 
 Everything is embeded into a docker compose which will run 2 small docker containers, one for the database and another for the web application.
 
 ## Build
-To build and lauch the app, just do : 
+To build and launch the app, just do : 
 ```
 docker-compose up --build
 ```
 
 Then connect to the web interface by the `http://localhost:5000` or `http://<server>:5000` url.
+The default password is Grand2026 and can be changed in the docker-compose.yml file.
 
 ## Usage
 Once a client (feb) is registered with its correct informations and that antennas are also registerd, a client can retreive the du_id corresponding to the closest antenna with the following command :
 ```
 curl -X POST http://<server>:5000/get_du_id -H "Content-Type: application/x-www-form-urlencoded" -d "long=93.9869122891667&lat=40.9372295400003"
 ```
+
+You will also find 2 example files (febs_list.csv and antenna_list.csv) that you can import into the database from the app for testing.
 
 ## Useful commande
 You can get into the database docker with the command :
