@@ -10,12 +10,12 @@
     <table id="antennaTable">
         <thead>
             <tr>
-                <th>Longitude <a href="{{ url_for('index_antenna', page=page, sort_by='longitude', sort_order='asc' if sort_by != 'longitude' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'longitude' and sort_order == 'asc' else 'down' }}"></i></a></th>
-                <th>Latitude <a href="{{ url_for('index_antenna', page=page, sort_by='latitude', sort_order='asc' if sort_by != 'latitude' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'latitude' and sort_order == 'asc' else 'down' }}"></i></a></th>
-                <th>DU ID <a href="{{ url_for('index_antenna', page=page, sort_by='du_id', sort_order='asc' if sort_by != 'du_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'du_id' and sort_order == 'asc' else 'down' }}"></i></a></th>
-                <th>FEB ID <a href="{{ url_for('index_antenna', page=page, sort_by='feb_id', sort_order='asc' if sort_by != 'feb_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'feb_id' and sort_order == 'asc' else 'down' }}"></i></a></th>
-                <th>MAC Address <a href="{{ url_for('index_antenna', page=page, sort_by='mac_address', sort_order='asc' if sort_by != 'mac_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'mac_address' and sort_order == 'asc' else 'down' }}"></i></a></th>
-                <th>IP Address <a href="{{ url_for('index_antenna', page=page, sort_by='ip_address', sort_order='asc' if sort_by != 'ip_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'ip_address' and sort_order == 'asc' else 'down' }}"></i></a></th>
+                <th>Longitude <a href="{{ url_for('index_antenna', page=page, sort_by='longitude', sort_order='asc' if sort_by != 'longitude' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'longitude' and sort_order == 'asc' else 'down' if sort_by == 'longitude' else 'right'}}"></i></a></th>
+                <th>Latitude <a href="{{ url_for('index_antenna', page=page, sort_by='latitude', sort_order='asc' if sort_by != 'latitude' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'latitude' and sort_order == 'asc' else 'down' if sort_by == 'latitude' else 'right'}}"></i></a></th>
+                <th>DU ID <a href="{{ url_for('index_antenna', page=page, sort_by='du_id', sort_order='asc' if sort_by != 'du_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'du_id' and sort_order == 'asc' else 'down' if sort_by == 'du_id' else 'right'}}"></i></a></th>
+                <th>FEB ID <a href="{{ url_for('index_antenna', page=page, sort_by='feb_id', sort_order='asc' if sort_by != 'feb_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'feb_id' and sort_order == 'asc' else 'down' if sort_by == 'feb_id' else 'right'}}"></i></a></th>
+                <th>MAC Address <a href="{{ url_for('index_antenna', page=page, sort_by='mac_address', sort_order='asc' if sort_by != 'mac_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'mac_address' and sort_order == 'asc' else 'down' if sort_by == 'mac_address' else 'right'}}"></i></a></th>
+                <th>IP Address <a href="{{ url_for('index_antenna', page=page, sort_by='ip_address', sort_order='asc' if sort_by != 'ip_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'ip_address' and sort_order == 'asc' else 'down' if sort_by == 'ip_address' else 'right'}}"></i></a></th>
                 <th >Actions</th>
             </tr>
         </thead>
@@ -25,15 +25,15 @@
                 <form action="{{ url_for('edit_antenna', id=antenna.antenna_id) }}" method="POST">
                     <td>
                         <p hidden="hidden">{{ antenna.longitude }}</p>
-                        <input type="text" name="longitude" value="{{ antenna.longitude }}" required>
+                        <input type="text" name="longitude" value="{{ antenna.longitude }}" class="editable-field" required>
                     </td>
                     <td>
                         <p hidden="hidden">{{ antenna.latitude }}</p>
-                        <input type="text" name="latitude" value="{{ antenna.latitude }}" required>
+                        <input type="text" name="latitude" value="{{ antenna.latitude }}" class="editable-field" required>
                     </td>
                     <td>
                         <p hidden="hidden">{{ antenna.du_id }}</p>
-                        <input type="number" name="du_id" value="{{ antenna.du_id }}" required>
+                        <input type="number" name="du_id" value="{{ antenna.du_id }}" class="editable-field" required>
                     </td>
                     <td>
                         {{ antenna.feb_id }}
@@ -45,7 +45,7 @@
                         {{ antenna.ip_address }}
                     </td>
                     <td>
-                        <button type="submit">Save</button>
+                        <button type="submit" class="save-btn">Save</button>
                 </form>
                         <form action="{{ url_for('delete_antenna', id=antenna.antenna_id) }}" method="POST" style="display:inline;">
                             <button type="submit">Delete</button>
@@ -76,10 +76,34 @@
         {% endif %}
     {% endif %}
 </div>
-{#    <script>
-        $(document).ready( function () {
-            $('#antennaTable').DataTable(); // Initialize DataTables
-        });
-    </script>#}
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Sélectionnez tous les champs modifiables
+    const editableFields = document.querySelectorAll('.editable-field');
+
+    editableFields.forEach(field => {
+        field.addEventListener('input', function () {
+            // Trouvez le bouton "Save" dans la même ligne
+            const saveButton = this.closest('tr').querySelector('.save-btn');
+
+            // Changez la couleur du bouton
+            saveButton.style.backgroundColor = '#ffcc00'; // Couleur jaune
+            saveButton.style.color = '#000'; // Couleur du texte
+        });
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const saveButtons = document.querySelectorAll('.save-btn');
+
+    saveButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            // Réinitialiser la couleur du bouton
+            this.style.backgroundColor = ''; // Couleur par défaut
+            this.style.color = ''; // Couleur du texte par défaut
+        });
+    });
+});
+</script>
 {% endblock %}

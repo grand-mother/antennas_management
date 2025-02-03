@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>DHCP Declaration for FEBs</h1>
+    <a href="{{ url_for('download_dhcp_declaration') }}">Download DHCP Declaration</a>
+    <pre>{{ dhcp_declaration }}</pre>
+    <a href="{{ url_for('index_feb') }}">Back to FEB Records</a>
+{% endblock %}

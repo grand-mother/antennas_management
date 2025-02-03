@@ -80,3 +80,18 @@ BEGIN
     LEFT JOIN feb f ON fa.feb_id = f.feb_id;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION get_febs_with_antennas()
+RETURNS TABLE (antenna_id INT, longitude DOUBLE PRECISION, latitude DOUBLE PRECISION,
+               du_id INT, feb_id INT, mac_address VARCHAR, ip_address VARCHAR, target_du_id INT) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT a.id AS antenna_id, a.longitude, a.latitude, a.du_id,
+           f.feb_id, f.mac_address, f.ip_address, f.target_du_id
+    FROM feb f
+    LEFT JOIN feb_antenna fa ON f.feb_id = fa.feb_id
+    LEFT JOIN antenna a ON fa.antenna_id = a.id
+    ;
+END;
+$$ LANGUAGE plpgsql;

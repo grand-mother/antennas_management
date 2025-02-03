@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, get_flashed_messages, abort
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session, get_flashed_messages, abort, Response
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from sqlalchemy.sql import func, insert
@@ -96,7 +96,8 @@ def index_feb():
     if sort_order not in ['asc', 'desc']:
         sort_order = 'asc'
     per_page = 15  # Number of records to be displayed per page
-    rows = db.session.execute(text((f"SELECT * FROM feb ORDER BY {sort_by} {sort_order}"))).fetchall()
+    #rows = db.session.execute(text((f"SELECT * FROM feb ORDER BY {sort_by} {sort_order}"))).fetchall()
+    rows = db.session.execute(text((f"SELECT * FROM get_febs_with_antennas() ORDER BY {sort_by} {sort_order}"))).fetchall()
     # Calculate pagination
     total_rows = len(rows)
     start = (page - 1) * per_page
@@ -135,27 +136,13 @@ def add_feb():
        flash(f'Error: {str(e)} </li><li><strong>The record was not added !</strong> </li>')
        return render_template('add_feb.html')
 
-#@app.route('/edit_feb/<int:feb_id>', methods=['GET', 'POST'])
-#@login_required
-#def edit_feb(feb_id):
-#    try:
-#      feb = Feb.query.get_or_404(feb_id)
-#      if request.method == 'POST':
-#          feb.mac_address = request.form['mac_address']
-#          feb.ip_address = request.form['ip_address']
-#          feb.target_du_id = request.form.get('target_du_id')
-#          db.session.commit()
-#          return redirect(url_for('index'))
-#      return render_template('edit_feb.html', feb=feb)
-#    except Exception as e:
-#         flash(f'Error: {str(e)} </li><li><strong>The record was not updated !</strong> </li>')
-#         return redirect(url_for('index'))
 
 @app.route('/edit_feb/<int:feb_id>', methods=['POST'])
 @login_required
 def edit_feb(feb_id):
     try:
         feb = Feb.query.get_or_404(feb_id)
+        feb.feb_id = request.form['feb_id']
         feb.mac_address = request.form['mac_address']
         feb.ip_address = request.form['ip_address']
         feb.target_du_id = request.form.get('target_du_id')
@@ -248,21 +235,6 @@ def edit_antenna_du(du_id):
     except Exception as e:
        flash(f'Error: {str(e)} </li><li><strong>The record was not updated !</strong> </li>')
        return redirect(url_for('index_antenna'))
-
-#@app.route('/edit_antenna/<int:id>', methods=['POST'])
-#@login_required
-#def edit_antenna(id):
-#    try:
-#        antenna = Antenna.query.get_or_404(id)
-#        antenna.longitude = request.form['longitude']
-#        antenna.latitude = request.form['latitude']
-#        antenna.du_id = request.form['du_id']
-#        db.session.commit()
-#        flash('Antenna updated successfully!')
-#        return redirect(url_for('index_antenna'))
-#    except Exception as e:
-#        flash(f'Error: {str(e)}. The record was not updated!')
-#        return redirect(url_for('index_antenna'))
 
 
 @app.route('/delete_antenna/<int:id>', methods=['POST'])
@@ -529,6 +501,44 @@ def process_csv_feb(file_path):
 
         db.session.commit()
     return res
+
+
+@app.route('/dhcp_declaration', methods=['GET'])
+@login_required
+def dhcp_declaration():
+    # Retrieve FEB records from the database
+    febs = Feb.query.all()  # Adjust based on your actual query needs
+
+    # Prepare the DHCP declaration data
+    dhcp_declaration_lines = []
+    for feb in febs:
+        # Example format: "hostname mac-address ip-address"
+        # Adjust the format as per your DHCP declaration requirements
+        line = f"host feb_{feb.feb_id} {{ hardware ethernet {feb.mac_address}; fixed-address {feb.ip_address}; }}"
+        dhcp_declaration_lines.append(line)
+
+    # Join all lines into a single output string
+    dhcp_output = "\n".join(dhcp_declaration_lines)
+
+    # Render a template to display the output or simply return it as plain text
+    return render_template('dhcp_declaration.html', dhcp_declaration=dhcp_output)
+
+@app.route('/download_dhcp_declaration', methods=['GET'])
+@login_required
+def download_dhcp_declaration():
+    febs = Feb.query.all()
+    dhcp_declaration_lines = []
+
+    for feb in febs:
+        line = f"host feb_{feb.feb_id} {{ hardware ethernet {feb.mac_address}; fixed-address {feb.ip_address}; }}"
+        dhcp_declaration_lines.append(line)
+
+    dhcp_output = "\n".join(dhcp_declaration_lines)
+
+    response = Response(dhcp_output, mimetype='text/plain')
+    response.headers.set("Content-Disposition", "attachment", filename="dhcp_antennas.conf")
+
+    return response
 
 #-----------
 if __name__ == '__main__':
