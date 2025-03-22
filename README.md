@@ -45,7 +45,7 @@ ports:
       - "10.0.0.1:5000:5000"
 ```
 
-## Useful commande
+## Useful commands
 You can get into the database docker with the command :
 ```
 docker exec -it postgis_container psql -U user -d grand
