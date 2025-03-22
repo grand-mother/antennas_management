@@ -23,6 +23,28 @@ curl -X POST http://<server>:5000/get_du_id -H "Content-Type: application/x-www-
 
 You will also find 2 example files (febs_list.csv and antenna_list.csv) that you can import into the database from the app for testing.
 
+## Restrict to private network
+In case you have a computer with 2 network (let say a private network 10.0.0.0/24 with ip 10.0.0.1 and a public network) and you want to restrict the app only to the private network, then just modify the port configuration in docker-compose.yml replacing :
+```
+ports:
+      - "5432:5432"
+```
+and
+```
+ports:
+      - "5000:5000"
+```
+by
+```
+ports:
+      - "10.0.0.1:5432:5432"
+```
+and
+```
+ports:
+      - "10.0.0.1:5000:5000"
+```
+
 ## Useful commande
 You can get into the database docker with the command :
 ```
