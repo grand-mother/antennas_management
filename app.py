@@ -90,12 +90,13 @@ def index():
 @login_required
 def index_feb():
     page = request.args.get('page', 1, type=int)  # Get the current page number from URL
+    per_page = request.args.get('per_page', 25, type=int)
     sort_by = request.args.get('sort_by', 'feb_id') # Get the sorting key
     sort_order = request.args.get('sort_order', 'desc')  # Get the sort order, default to 'asc'
     # Ensure valid sort_order
     if sort_order not in ['asc', 'desc']:
         sort_order = 'asc'
-    per_page = 15  # Number of records to be displayed per page
+    #per_page = 15  # Number of records to be displayed per page
     #rows = db.session.execute(text((f"SELECT * FROM feb ORDER BY {sort_by} {sort_order}"))).fetchall()
     rows = db.session.execute(text((f"SELECT * FROM get_febs_with_antennas() ORDER BY {sort_by} {sort_order}"))).fetchall()
     # Calculate pagination
@@ -169,12 +170,13 @@ def delete_feb(feb_id):
 @login_required
 def index_antenna():
     page = request.args.get('page', 1, type=int)  # Get the current page number from URL
+    per_page = request.args.get('per_page', 25, type=int)
     sort_by = request.args.get('sort_by', 'du_id') # Get the sorting key
     sort_order = request.args.get('sort_order', 'desc')  # Get the sort order, default to 'asc'
     # Ensure valid sort_order
     if sort_order not in ['asc', 'desc']:
         sort_order = 'asc'
-    per_page = 15  # Number of records to be displayed per page
+    #per_page = 15  # Number of records to be displayed per page
     rows = db.session.execute(text((f"SELECT * FROM get_antennas_with_febs() ORDER BY {sort_by} {sort_order}"))).fetchall()
     # Calculate pagination
     total_rows = len(rows)

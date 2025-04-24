@@ -7,15 +7,30 @@
     <li><a href="{{ url_for('add_antenna') }}">Add a new antenna</a></li>
     <li><a href="{{ url_for('upload_antenna') }}">Upload antennas from a csv file</a></li>
 
+    <div class="pagination-controls">
+        <form action="{{ url_for('index_antenna') }}" method="get" style="display: inline-block;">
+            <input type="hidden" name="sort_by" value="{{ sort_by }}">
+            <input type="hidden" name="sort_order" value="{{ sort_order }}">
+            Rows per page:
+            <select name="per_page" onchange="this.form.submit()">
+                <option value="15" {% if per_page == 15 %}selected{% endif %}>15</option>
+                <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+                <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+                <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+                <option value="500" {% if per_page == 500 %}selected{% endif %}>500</option>
+            </select>
+        </form>
+    </div>
+
     <table id="antennaTable">
         <thead>
             <tr>
-                <th>Longitude <a href="{{ url_for('index_antenna', page=page, sort_by='longitude', sort_order='asc' if sort_by != 'longitude' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'longitude' and sort_order == 'asc' else 'down' if sort_by == 'longitude' else 'right'}}"></i></a></th>
-                <th>Latitude <a href="{{ url_for('index_antenna', page=page, sort_by='latitude', sort_order='asc' if sort_by != 'latitude' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'latitude' and sort_order == 'asc' else 'down' if sort_by == 'latitude' else 'right'}}"></i></a></th>
-                <th>DU ID <a href="{{ url_for('index_antenna', page=page, sort_by='du_id', sort_order='asc' if sort_by != 'du_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'du_id' and sort_order == 'asc' else 'down' if sort_by == 'du_id' else 'right'}}"></i></a></th>
-                <th>FEB ID <a href="{{ url_for('index_antenna', page=page, sort_by='feb_id', sort_order='asc' if sort_by != 'feb_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'feb_id' and sort_order == 'asc' else 'down' if sort_by == 'feb_id' else 'right'}}"></i></a></th>
-                <th>MAC Address <a href="{{ url_for('index_antenna', page=page, sort_by='mac_address', sort_order='asc' if sort_by != 'mac_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'mac_address' and sort_order == 'asc' else 'down' if sort_by == 'mac_address' else 'right'}}"></i></a></th>
-                <th>IP Address <a href="{{ url_for('index_antenna', page=page, sort_by='ip_address', sort_order='asc' if sort_by != 'ip_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'ip_address' and sort_order == 'asc' else 'down' if sort_by == 'ip_address' else 'right'}}"></i></a></th>
+                <th>Longitude <a href="{{ url_for('index_antenna', page=page, per_page=per_page, sort_by='longitude', sort_order='asc' if sort_by != 'longitude' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'longitude' and sort_order == 'asc' else 'down' if sort_by == 'longitude' else 'right'}}"></i></a></th>
+                <th>Latitude <a href="{{ url_for('index_antenna', page=page, per_page=per_page, sort_by='latitude', sort_order='asc' if sort_by != 'latitude' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'latitude' and sort_order == 'asc' else 'down' if sort_by == 'latitude' else 'right'}}"></i></a></th>
+                <th>DU ID <a href="{{ url_for('index_antenna', page=page, per_page=per_page, sort_by='du_id', sort_order='asc' if sort_by != 'du_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'du_id' and sort_order == 'asc' else 'down' if sort_by == 'du_id' else 'right'}}"></i></a></th>
+                <th>FEB ID <a href="{{ url_for('index_antenna', page=page, per_page=per_page, sort_by='feb_id', sort_order='asc' if sort_by != 'feb_id' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'feb_id' and sort_order == 'asc' else 'down' if sort_by == 'feb_id' else 'right'}}"></i></a></th>
+                <th>MAC Address <a href="{{ url_for('index_antenna', page=page, per_page=per_page, sort_by='mac_address', sort_order='asc' if sort_by != 'mac_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'mac_address' and sort_order == 'asc' else 'down' if sort_by == 'mac_address' else 'right'}}"></i></a></th>
+                <th>IP Address <a href="{{ url_for('index_antenna', page=page, per_page=per_page, sort_by='ip_address', sort_order='asc' if sort_by != 'ip_address' or sort_order == 'desc' else 'desc') }}"><i class="fas fa-chevron-{{ 'up' if sort_by == 'ip_address' and sort_order == 'asc' else 'down' if sort_by == 'ip_address' else 'right'}}"></i></a></th>
                 <th >Actions</th>
             </tr>
         </thead>
@@ -60,7 +75,7 @@
 
 
     {% if total_rows > per_page %}
-        <form action="{{ url_for('index_antenna', sort_by=sort_by, sort_order=sort_order ) }}"  style="display:inline;">
+        <form action="{{ url_for('index_antenna', sort_by=sort_by, sort_order=sort_order, per_page=per_page ) }}"  style="display:inline;">
             Jump to page:
             <input type="number" name="page" min="1" max="{{ (total_rows // per_page) + (total_rows % per_page > 0) }}" required>
             <input type="hidden" name="sort_by" value="{{ sort_by }}">
@@ -68,11 +83,11 @@
             <button type="submit">Go</button>
         </form>
         {% if page > 1 %}
-            <a href="{{ url_for('index_antenna', page=page-1, sort_by=sort_by, sort_order=sort_order) }}">Previous</a>
+            <a href="{{ url_for('index_antenna', page=page-1, sort_by=sort_by, sort_order=sort_order, per_page=per_page) }}">Previous</a>
         {% endif %}
         Page {{ page }} of {{ (total_rows // per_page) + (total_rows % per_page > 0) }}
         {% if page < (total_rows // per_page) + (total_rows % per_page > 0) %}
-            <a href="{{ url_for('index_antenna', page=page+1, sort_by=sort_by, sort_order=sort_order) }}">Next</a>
+            <a href="{{ url_for('index_antenna', page=page+1, sort_by=sort_by, sort_order=sort_order, per_page=per_page) }}">Next</a>
         {% endif %}
     {% endif %}
 </div>
