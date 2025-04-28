@@ -1,5 +1,5 @@
 # antennas_management
-This is the code to manage antennas and febs for the GrandProto experiment in China.
+This is the code to manage antennas and febs for the GrandProto 300 experiment in China.
 It is composed of a main application app.py with some web templates in the templates directory.
 
 It also provides a small postgres database with the postgis extension to manage geospatial data.
