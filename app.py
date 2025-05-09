@@ -51,6 +51,11 @@ class Antenna(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     du_id = db.Column(db.Integer, unique=True, nullable=False)
 
+class Feb_antenna(db.Model):
+    feb_id = db.Column(db.Integer, primary_key=True)
+    antenna_id = db.Column(db.Integer, primary_key=True)
+    last_seen = db.Column(db.DateTime, nullable=False)
+    last_test = db.Column(db.DateTime, nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -160,6 +165,14 @@ def edit_feb(feb_id):
 @app.route('/delete_feb/<int:feb_id>', methods=['POST'])
 @login_required
 def delete_feb(feb_id):
+    feb_antenna_records = Feb_antenna.query.filter_by(feb_id=feb_id).all()
+    if not feb_antenna_records:
+        pass
+    else:
+        # Log or perform actions with the matching records
+        for record in feb_antenna_records:
+            # flash(f"Found FEB_Antenna record with feb_id={record.feb_id}, last seen={record.last_seen}.", "success")
+            db.session.delete(record)
     feb = Feb.query.get_or_404(feb_id)
     db.session.delete(feb)
     db.session.commit()
@@ -242,6 +255,14 @@ def edit_antenna_du(du_id):
 @app.route('/delete_antenna/<int:id>', methods=['POST'])
 @login_required
 def delete_antenna(id):
+    feb_antenna_records = Feb_antenna.query.filter_by(antenna_id=id).all()
+    if not feb_antenna_records:
+        flash(f"No matching records found in FEB_Antenna for antenna_id={id}.", "info")
+    else:
+        # Log or perform actions with the matching records
+        for record in feb_antenna_records:
+            #flash(f"Found FEB_Antenna record with feb_id={record.feb_id}, last seen={record.last_seen}.", "success")
+            db.session.delete(record)
     antenna = Antenna.query.get_or_404(id)
     db.session.delete(antenna)
     db.session.commit()
@@ -430,43 +451,115 @@ def upload_feb():
     return render_template('upload_feb.html')
 
 def process_csv_antenna(file_path):
-    res=True
+    res = True
+    line = 2  # Start line numbering from 2 assuming line 1 is the header
     with open(file_path, 'r') as f:
-        reader = csv.reader(f)
-        line=2
-        next(reader)  # Ignore the header row if there is one
+        reader = csv.DictReader(f)  # Use DictReader to handle column names
+        required_columns = {'longitude', 'latitude', 'du_id'}
+
+        # Check if required columns are present in the file
+        if not required_columns.issubset(reader.fieldnames):
+            flash("Error: The CSV file must contain 'longitude', 'latitude', and 'du_id' columns.", "error")
+            return False
+
         for row in reader:
-            # Read csv with columns : longitude, latitude, du_id
-            if len(row) != 3:
-                continue  # Ignore invalid lines
-            longitude, latitude, du_id = row
-            if latitude != "" and longitude != "" and du_id != "":
+            try:
+                # Read only the required columns
+                longitude = row.get('longitude', "").strip()
+                latitude = row.get('latitude', "").strip()
+                du_id = row.get('du_id', "").strip()
+
+                # Skip rows with missing required data
+                if not (longitude and latitude and du_id):
+                    line += 1
+                    continue
+
                 # Check if the antenna already exists in the database
                 try:
                     existing_antenna = Antenna.query.filter_by(du_id=int(du_id)).first()
                 except Exception as e:
-                    flash(f'Error on line {line}: {str(e)} </li><li><strong></strong> </li>')
-                    res=False
+                    flash(f"Error on line {line}: {str(e)}", "error")
+                    res = False
                     break
+
                 if existing_antenna is None:
                     # Add to database
                     try:
-                        new_antenna = Antenna(longitude=float(longitude), latitude=float(latitude), du_id=int(du_id))
+                        new_antenna = Antenna(
+                            longitude=float(longitude),
+                            latitude=float(latitude),
+                            du_id=int(du_id)
+                        )
                         db.session.add(new_antenna)
-                        flash(f'Antenna {du_id} added')
+                        flash(f"Antenna {du_id} added successfully.")
                     except Exception as e:
-                        #db.session.rollback()
-                        flash(f'Error: {str(e)} </li><li><strong></strong> </li>')
-                        res=False
+                        flash(f"Error on line {line}: {str(e)}", "error")
+                        res = False
                 else:
                     # Update existing record
-                    existing_antenna.longitude = longitude
-                    existing_antenna.latitude = latitude
+                    try:
+                        existing_antenna.longitude = float(longitude)
+                        existing_antenna.latitude = float(latitude)
+                        flash(f"Antenna {du_id} updated successfully.")
+                    except Exception as e:
+                        flash(f"Error updating antenna on line {line}: {str(e)}", "error")
+                        res = False
 
-                line+=1
+                line += 1
 
-        db.session.commit()
+            except ValueError:
+                flash(f"Error on line {line}: Invalid data format.", "error")
+                res = False
+                line += 1
+                continue
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Database commit error: {str(e)}", "error")
+            res = False
+
     return res
+
+# def old_process_csv_antenna(file_path):
+#     res=True
+#     with open(file_path, 'r') as f:
+#         reader = csv.reader(f)
+#         line=2
+#         next(reader)  # Ignore the header row if there is one
+#         for row in reader:
+#             # Read csv with columns : longitude, latitude, du_id
+#             #if len(row) != 3:
+#             #    continue  # Ignore invalid lines
+#             longitude, latitude, du_id = row
+#             if latitude != "" and longitude != "" and du_id != "":
+#                 # Check if the antenna already exists in the database
+#                 try:
+#                     existing_antenna = Antenna.query.filter_by(du_id=int(du_id)).first()
+#                 except Exception as e:
+#                     flash(f'Error on line {line}: {str(e)} </li><li><strong></strong> </li>')
+#                     res=False
+#                     break
+#                 if existing_antenna is None:
+#                     # Add to database
+#                     try:
+#                         new_antenna = Antenna(longitude=float(longitude), latitude=float(latitude), du_id=int(du_id))
+#                         db.session.add(new_antenna)
+#                         flash(f'Antenna {du_id} added')
+#                     except Exception as e:
+#                         #db.session.rollback()
+#                         flash(f'Error: {str(e)} </li><li><strong></strong> </li>')
+#                         res=False
+#                 else:
+#                     # Update existing record
+#                     existing_antenna.longitude = longitude
+#                     existing_antenna.latitude = latitude
+#
+#                 line+=1
+#
+#         db.session.commit()
+#     return res
 
 def process_csv_feb(file_path):
     res=True

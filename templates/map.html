@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js"></script>
     <style>
         #map {
             height: 1024px; /*600px;   Augmente la hauteur de la carte */
@@ -25,6 +25,7 @@
 
 
     <h1>Antenna Positions</h1>
+
     <div id="map"></div>
 
     <script>
@@ -38,7 +39,11 @@
             popupAnchor: [1, -34],
             shadowSize: [41, 41]
         });
-        var defaultIcon = new L.Icon.Default();
+        var defaultIcon = new L.Icon.Default({iconSize: [15, 25],
+        iconAnchor: [12, 25],
+        popupAnchor: [1, -25]});
+
+
         // Add map layer
         //L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         //    maxZoom: 19,
@@ -112,30 +117,37 @@
             return response.json();
         }
 
- {#       function updateMarkers(antennas) {
-            currentMarkers.clearLayers(); // Supprime les anciens marqueurs
-
-            var newMarkers = antennas.map(antenna =>
-                //L.marker([antenna.latitude, antenna.longitude]).bindPopup(`Antenne #${antenna.id}`)
-                L.marker([antenna.latitude, antenna.longitude]).bindPopup(`DU_ID: ${ antenna.du_id }<br> lat: ${ antenna.latitude}<br>long: ${antenna.longitude}<br> Feb: ${antenna.feb_id} (${antenna.ip_address}) <br><a href="edit_antenna_du/${antenna.du_id}">edit antenna</a>`)
-            );
-
-            currentMarkers.addLayers(newMarkers);
-        }#}
-
         function updateMarkers(antennas) {
             currentMarkers.clearLayers();
 
-            var newMarkers = antennas.map(antenna => {
-                // Choose icon based on feb_id presence
+            // Create new markers for each antenna
+            const newMarkers = antennas.map(antenna => {
+                // Define the icon (color etc., whatever suits your setup)
                 const icon = antenna.feb_id ? greenIcon : defaultIcon;
 
-                return L.marker([antenna.latitude, antenna.longitude], { icon })
-                    .bindPopup(`DU_ID: ${antenna.du_id}<br>lat: ${antenna.latitude}<br>long: ${antenna.longitude}<br>Feb: ${antenna.feb_id} (${antenna.ip_address})<br><a href="edit_antenna_du/${antenna.du_id}">edit antenna</a>`);
+                // Create a marker
+                const marker = L.marker([antenna.latitude, antenna.longitude], { icon });
+
+                // Add text below the marker dynamically
+                const label = L.divIcon({
+                    className: "du-id-label",
+                    html: `${antenna.du_id}`, // Place the DU ID inside
+                    iconSize: null,
+                });
+
+                // Create label dynamically and bind popups as usual
+                return marker
+                    .bindPopup(`DU_ID: ${antenna.du_id}<br>lat: ${antenna.latitude}<br>long: ${antenna.longitude}<br>Feb: ${antenna.feb_id} (${antenna.ip_address})<br><a href="edit_antenna_du/${antenna.du_id}">edit antenna</a>`)
+                    .on("add", function () {
+                        // Also add the `du_id` label below the marker
+                        L.marker([antenna.latitude , antenna.longitude  ], { icon: label }).addTo(map);
+                    });
             });
 
             currentMarkers.addLayers(newMarkers);
         }
+
+       
 
 
         async function updateVisibleAntennas() {
@@ -155,8 +167,21 @@
             } catch (err) {
                 if (err.name !== 'AbortError') console.error(err);
             }
-}
+        }
 
+        function exportMapAsImage() {
+            const mapDiv = document.getElementById('map'); // Target the map container
+            domtoimage.toPng(mapDiv)
+                .then(function (dataUrl) {
+                    const link = document.createElement('a'); // Create a download link
+                    link.download = 'map-screenshot.png'; // Set the file name
+                    link.href = dataUrl; // Use the generated image data
+                    link.click(); // Trigger download
+                })
+                .catch(function (error) {
+                    console.error('Error capturing the map:', error);
+                });
+        }
     </script>
-
+   <button onclick="exportMapAsImage()">Export Map</button>
 {% endblock %}

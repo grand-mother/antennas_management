@@ -8,29 +8,29 @@ h1 {
 }
 
 header {
-    background-color: #4CAF50; /* Couleur d'arrière-plan */
-    padding: 15px; /* Espacement */
-    text-align: center; /* Centrer le texte */
-    color: white; /* Couleur du texte */
+    background-color: #4CAF50;
+    padding: 15px;
+    text-align: center;
+    color: white;
 }
 
 nav {
-    margin-bottom: 20px; /* Espacement en bas */
+    margin-bottom: 20px;
 }
 
 nav ul {
-    list-style-type: none; /* Supprimer les puces */
-    padding: 0; /* Supprimer l'espacement interne */
+    list-style-type: none;
+    padding: 0;
 }
 
 nav ul li {
-    display: inline; /* Afficher les éléments en ligne */
-    margin-right: 15px; /* Espacement entre les éléments */
+    display: inline;
+    margin-right: 15px;
 }
 
 nav ul li a {
-    text-decoration: none; /* Supprimer le soulignement des liens */
-    color: #4CAF50; /* Couleur des liens */
+    text-decoration: none;
+    color: #4CAF50;
 }
 
 table {
@@ -64,32 +64,31 @@ form {
 }
 
 .alert {
-    color: red;  /* Texte rouge pour les messages d'erreur */
-    background-color: #f8d7da; /* Optionnel : fond rouge clair */
-    border: 1px solid #f5c6cb; /* Optionnel : bordure rouge */
-    padding: 10px; /* Espacement interne */
-    margin: 10px 0; /* Espacement externe */
-    border-radius: 5px; /* Coins arrondis */
+    color: red;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
 }
 
 .alert ul {
-    list-style-type: none; /* Supprimer la puce des listes */
-    padding: 0; /* Supprimer l'espacement interne */
+    list-style-type: none;
+    padding: 0;
 }
 
-/* Pour Chrome, Safari, Edge, Opera */
+/* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-/* Pour Firefox */
+/* Firefox */
 input[type=number] {
   -moz-appearance: textfield;
 }
 
-/* Dans votre CSS */
 .marker-cluster-small {
     background-color: rgba(181, 226, 140, 0.6);
 }
@@ -98,4 +97,12 @@ input[type=number] {
 }
 .marker-cluster-large {
     background-color: rgba(253, 156, 115, 0.6);
+}
+
+.du-id-label {
+    background: rgba(255, 255, 255, 0.25);
+    padding: 0px 0px;
+    border-radius: 1px;
+    font-size: 9px;
+    text-align: center;
 }
