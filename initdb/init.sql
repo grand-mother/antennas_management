@@ -32,8 +32,8 @@ CREATE INDEX idx_geom ON antenna USING GIST (geom);
 -- Create table febs
 CREATE TABLE IF NOT EXISTS feb (
     feb_id INT PRIMARY KEY,              
-    mac_address VARCHAR(17) UNIQUE NOT NULL,    -- Format MAC (XX:XX:XX:XX:XX:XX)
-    ip_address VARCHAR(15) UNIQUE NOT NULL,       -- Format IP (XXX.XXX.XXX.XXX)
+    mac_address VARCHAR(17) UNIQUE ,    -- Format MAC (XX:XX:XX:XX:XX:XX)
+    ip_address VARCHAR(15) UNIQUE ,       -- Format IP (XXX.XXX.XXX.XXX)
     target_du_id INT
 );
 

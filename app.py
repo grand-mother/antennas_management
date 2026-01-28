@@ -9,6 +9,7 @@ import os, csv
 app = Flask(__name__)
 app.secret_user = os.getenv('user', 'admin')
 app.secret_key = os.getenv('SECRET', 'Grand2025')
+app.min_du_dist = os.getenv('MIN_ANT_DIST', 10)
 database_uri = os.getenv('DATABASE_URI', 'postgresql://user:password@db/grand') 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 
@@ -124,23 +125,44 @@ def add_feb():
            mac_address=request.form['mac_address'],
            ip_address=request.form['ip_address'],
            target_du_id=request.form.get('target_du_id')
+           _add_feb(feb_id, mac_address, ip_address, target_du_id)
            # Convert target_du_id to None if not provided
-           if target_du_id == '':
-                target_du_id = None  # Default to None if not specified
-
-           new_feb = Feb(
-                feb_id=feb_id,
-                mac_address=mac_address,
-                ip_address=ip_address,
-                target_du_id=target_du_id
-           )
-           db.session.add(new_feb)
-           db.session.commit()
+           # if target_du_id == '':
+           #      target_du_id = None  # Default to None if not specified
+           #
+           # new_feb = Feb(
+           #      feb_id=feb_id,
+           #      mac_address=mac_address,
+           #      ip_address=ip_address,
+           #      target_du_id=target_du_id
+           # )
+           # db.session.add(new_feb)
+           # db.session.commit()
            return redirect(url_for('index'))
        return render_template('add_feb.html')
     except Exception as e:
        flash(f'Error: {str(e)} </li><li><strong>The record was not added !</strong> </li>')
        return render_template('add_feb.html')
+
+
+def _add_feb(feb_id, mac_address, ip_address, target_du_id):
+    try:
+        if target_du_id == '':
+            target_du_id = None  # Default to None if not specified
+
+        new_feb = Feb(
+            feb_id=feb_id,
+            mac_address=mac_address,
+            ip_address=ip_address,
+            target_du_id=target_du_id
+        )
+        db.session.add(new_feb)
+        db.session.commit()
+        return new_feb
+    except Exception as e:
+        print(str(e))
+        return None
+
 
 
 @app.route('/edit_feb/<int:feb_id>', methods=['POST'])
@@ -272,67 +294,92 @@ def delete_antenna(id):
 def get_du_id():
     longitude = float(request.form.get('long'))
     latitude = float(request.form.get('lat'))
-#    data = request.get_json()
-#    longitude = data.get('longitude')
-#    latitude = data.get('latitude')
+    feb_id = request.form.get('feb_id')
+    mac_address = request.form.get('mac_address')
+    ip_address = request.form.get('ip_address')
+    feb = None
+    #    data = request.get_json()
+    #    longitude = data.get('longitude')
+    #    latitude = data.get('latitude')
     if longitude is None or latitude is None:
-       longitude = 0
-       latitude = 0
-    if longitude != 0 and latitude != 0 :
-       result = db.session.execute(
+        longitude = 0
+        latitude = 0
+    if longitude != 0 and latitude != 0:
+        # Get du_id of the closest antenna + distance in degrees
+        #       result = db.session.execute(
+        #            text("""
+        #            SELECT du_id, id, ST_Distance(geom, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)) as distance
+        #            FROM antenna
+        #            ORDER BY distance
+        #            LIMIT 1;
+        #            """),
+        #            {"lon": longitude, "lat": latitude}
+        #       ).fetchone()
+
+        # Get du_id of the closest antenna + distance in meters
+        result = db.session.execute(
             text("""
-            SELECT du_id, id
-            FROM antenna
-            ORDER BY ST_Distance(geom, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326))
-            LIMIT 1;
-            """),
+                 SELECT du_id, id, ST_Distance(geom, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography) as distance
+                 FROM antenna
+                 ORDER BY distance LIMIT 1;
+                 """),
             {"lon": longitude, "lat": latitude}
-       ).fetchone()
+        ).fetchone()
 
-       if result is not None:
-          du_id = result[0]
-          antenna_id = result[1]
-          client_ip = request.remote_addr
-          feb = Feb.query.filter_by(ip_address=client_ip).first()
-          if feb is not None:
-             now=func.current_timestamp()
-             try:
-                 # Attempt to insert using feb_id
-                 resupd = db.session.execute(
-                     text("""
-                                         INSERT INTO feb_antenna (feb_id, antenna_id, last_seen, last_test) 
-                                         VALUES (:feb_id, :antenna_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
-                                         ON CONFLICT(feb_id) DO UPDATE 
-                                         SET antenna_id = EXCLUDED.antenna_id, 
-                                             last_seen = EXCLUDED.last_seen, 
-                                             last_test = EXCLUDED.last_test;
-                                     """),
-                     {"feb_id": feb.feb_id, "antenna_id": antenna_id}
-                 )
-                 db.session.commit()
-             except Exception as e:
-                 # If there was an integrity error, handle conflict by attempting to insert with antenna_id
-                 db.session.rollback()  # Rollback the previous transaction
-                 resupd = db.session.execute(
-                     text("""
-                                         INSERT INTO feb_antenna (feb_id, antenna_id, last_seen, last_test) 
-                                         VALUES (:feb_id, :antenna_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) 
-                                         ON CONFLICT(antenna_id) DO UPDATE 
-                                         SET feb_id = EXCLUDED.feb_id, 
-                                             last_seen = EXCLUDED.last_seen, 
-                                             last_test = EXCLUDED.last_test;
-                                     """),
-                     {"feb_id": feb.feb_id, "antenna_id": antenna_id}
-                 )
-                 db.session.commit()
+        if result is not None:
+            du_id = result[0]
+            antenna_id = result[1]
+            distance = result[2]
+            if distance >= app.min_du_dist:
+                return "0"+ " " + str(distance) + " > " + str(app.min_du_dist)
 
-                
-       else:
-          du_id = 0
+            # client_ip = request.remote_addr
+            # feb = Feb.query.filter_by(ip_address=client_ip).first()
+            if feb_id is not None:
+                feb = Feb.query.filter_by(feb_id=feb_id).first()
+                if feb is None:  # Feb not recorded. We create it
+                    target_du_id = None
+                    feb = _add_feb(feb_id, mac_address, ip_address, target_du_id)
+            if feb is not None:
+                now = func.current_timestamp()
+                try:
+                    # Attempt to insert using feb_id
+                    resupd = db.session.execute(
+                        text("""
+                             INSERT INTO feb_antenna (feb_id, antenna_id, last_seen, last_test)
+                             VALUES (:feb_id, :antenna_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(feb_id) DO
+                             UPDATE
+                                 SET antenna_id = EXCLUDED.antenna_id,
+                                 last_seen = EXCLUDED.last_seen,
+                                 last_test = EXCLUDED.last_test;
+                             """),
+                        {"feb_id": feb.feb_id, "antenna_id": antenna_id}
+                    )
+                    db.session.commit()
+                except Exception as e:
+                    # If there was an integrity error, handle conflict by attempting to insert with antenna_id
+                    db.session.rollback()  # Rollback the previous transaction
+                    resupd = db.session.execute(
+                        text("""
+                             INSERT INTO feb_antenna (feb_id, antenna_id, last_seen, last_test)
+                             VALUES (:feb_id, :antenna_id, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP) ON CONFLICT(antenna_id) DO
+                             UPDATE
+                                 SET feb_id = EXCLUDED.feb_id,
+                                 last_seen = EXCLUDED.last_seen,
+                                 last_test = EXCLUDED.last_test;
+                             """),
+                        {"feb_id": feb.feb_id, "antenna_id": antenna_id}
+                    )
+                    db.session.commit()
+
+
+        else:
+            du_id = 0
+
     else:
-       du_id = 0
-    
-    return str(du_id)
+        du_id = 0
+
+    return str(du_id) + " " + str(distance)
 
 
 @app.route('/map')

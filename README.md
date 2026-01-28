@@ -18,10 +18,15 @@ The default password is Grand2026 and can be changed in the docker-compose.yml f
 ## Usage
 Once a client (feb) is registered with its correct informations and that antennas are also registerd, a client can retreive the du_id corresponding to the closest antenna with the following command :
 ```
-curl -X POST http://<server>:5000/get_du_id -H "Content-Type: application/x-www-form-urlencoded" -d "long=93.9869122891667&lat=40.9372295400003"
+curl -X POST http://<server>:5000/get_du_id -H "Content-Type: application/x-www-form-urlencoded" -d "long=93.9869122891667&lat=40.9372295400003&feb_id=193"
 ```
 
+If the closest antenna is more distant than MIN_ANT_DIST set in the docker-compose.yml file (or 10m by default) it is assumed that the GPS value is incorrect thus the returned du_id is 0.
+If feb_id is passed then the system will record the association feb_id/du_id which allows to know which feb is installed on which antenna.
+If feb_id does not exists, it's created automatically.
+In addition mac_address and ip_address can be passe to have a full record of the FEB.
 You will also find 2 example files (febs_list.csv and antenna_list.csv) that you can import into the database from the app for testing.
+
 
 ## Restrict to private network
 In case you have a computer with 2 network (let say a private network 10.0.0.0/24 with ip 10.0.0.1 and a public network) and you want to restrict the app only to the private network, then just modify the port configuration in docker-compose.yml replacing :

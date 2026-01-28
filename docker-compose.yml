@@ -25,7 +25,8 @@ services:
     environment:
       - FLASK_ENV=development
       - DATABASE_URI=postgresql://user:password@db/grand
-      - SECRET=Grand2026  
+      - SECRET=Grand2026
+      - MIN_ANT_DIST=20
     volumes:
       - ./dhcpd_list.conf:/etc/dhcpd_list.conf
       - ./:/app
