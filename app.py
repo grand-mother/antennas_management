@@ -295,8 +295,8 @@ def get_du_id():
     longitude = float(request.form.get('long'))
     latitude = float(request.form.get('lat'))
     feb_id = request.form.get('feb_id')
-    mac_address = request.form.get('mac_address')
-    ip_address = request.form.get('ip_address')
+    mac_address = request.form.get('feb_mac_address')
+    ip_address = request.form.get('feb_ip')
     feb = None
     #    data = request.get_json()
     #    longitude = data.get('longitude')

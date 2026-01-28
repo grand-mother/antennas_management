@@ -24,7 +24,7 @@ curl -X POST http://<server>:5000/get_du_id -H "Content-Type: application/x-www-
 If the closest antenna is more distant than MIN_ANT_DIST set in the docker-compose.yml file (or 10m by default) it is assumed that the GPS value is incorrect thus the returned du_id is 0.
 If feb_id is passed then the system will record the association feb_id/du_id which allows to know which feb is installed on which antenna.
 If feb_id does not exists, it's created automatically.
-In addition mac_address and ip_address can be passe to have a full record of the FEB.
+In addition feb_mac_address and feb_ip can be passed to have a full record of the FEB.
 You will also find 2 example files (febs_list.csv and antenna_list.csv) that you can import into the database from the app for testing.
 
 
