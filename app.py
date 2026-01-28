@@ -331,7 +331,7 @@ def get_du_id():
             antenna_id = result[1]
             distance = result[2]
             if distance >= app.min_du_dist:
-                return "0"+ " " + str(distance) + " > " + str(app.min_du_dist)
+                return "0"
 
             # client_ip = request.remote_addr
             # feb = Feb.query.filter_by(ip_address=client_ip).first()
@@ -379,7 +379,7 @@ def get_du_id():
     else:
         du_id = 0
 
-    return str(du_id) + " " + str(distance)
+    return str(du_id)
 
 
 @app.route('/map')
