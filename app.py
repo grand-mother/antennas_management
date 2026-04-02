@@ -9,7 +9,7 @@ import os, csv
 app = Flask(__name__)
 app.secret_user = os.getenv('user', 'admin')
 app.secret_key = os.getenv('SECRET', 'Grand2025')
-app.min_du_dist = os.getenv('MIN_ANT_DIST', 10)
+app.min_du_dist = os.getenv('MIN_ANT_DIST', 10.)
 database_uri = os.getenv('DATABASE_URI', 'postgresql://user:password@db/grand') 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_uri
 
@@ -330,7 +330,7 @@ def get_du_id():
             du_id = result[0]
             antenna_id = result[1]
             distance = result[2]
-            if distance >= app.min_du_dist:
+            if float(distance) >= float(app.min_du_dist):
                 return "0"
 
             # client_ip = request.remote_addr
